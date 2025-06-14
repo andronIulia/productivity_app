@@ -40,6 +40,11 @@ dependencies:
   #app_settings: ^6.1.1 #asta nu l am folosit gen ca puteam sa deschid la partea de screen time
   android_intent_plus: ^5.3.0
   shared_preferences: ^2.5.3
+  #device_installed_apps: ^1.0.1
+  #device_apps:
+  installed_apps: ^1.6.0
+  flutter_local_notifications: ^19.2.1
+  fl_chart: ^1.0.0
 
 dev_dependencies:
   flutter_test:

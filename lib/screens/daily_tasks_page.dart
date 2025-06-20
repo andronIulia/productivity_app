@@ -65,6 +65,12 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
     userDailyTasksRef.doc(docId).delete();
   }
 
+  /*Future<bool> hasTasksForToday() async {
+    final tasksRemaining =
+        await userDailyTasksRef.where('isDone', isEqualTo: false).get();
+    return tasksRemaining.docs.isNotEmpty;
+  }*/
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

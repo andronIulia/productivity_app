@@ -1,9 +1,13 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:android_intent_plus/android_intent.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 //import 'package:device_installed_apps/app_info.dart';
 //import 'package:device_installed_apps/device_installed_apps.dart';
 import 'package:flutter/material.dart';
 import 'package:installed_apps/index.dart';
+import 'package:productivity_app/screens/auth/screen_time_manager.dart';
 import 'package:productivity_app/screens/usage_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:usage_stats/usage_stats.dart';
@@ -44,7 +48,8 @@ class _ScreenTimePageState extends State<ScreenTimePage>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      checkPermission();
+      //checkPermission();
+      refreshData();
     }
   }
 
@@ -58,9 +63,9 @@ class _ScreenTimePageState extends State<ScreenTimePage>
   void initPermissions() async {
     bool? granted = await UsageStats.checkUsagePermission();
     prefs = await SharedPreferences.getInstance();
-    /*if (granted!) {
-      await fetchTodayUsageStats();
-    }*/
+    if (granted!) {
+      await ScreenTimeManager().fetchTodayUsageStats();
+    }
     if (!granted!) {
       //prefs = await SharedPreferences.getInstance();
       bool alreadyRequested =
@@ -111,7 +116,7 @@ class _ScreenTimePageState extends State<ScreenTimePage>
     }
   }
 
-  Future<Map<UsageInfo, AppInfo?>> fetchTodayUsageStats() async {
+  /*Future<Map<UsageInfo, AppInfo?>> fetchTodayUsageStats() async {
     DateTime endDate = DateTime.now();
     DateTime startDate = DateTime(endDate.year, endDate.month, endDate.day);
 
@@ -148,6 +153,21 @@ class _ScreenTimePageState extends State<ScreenTimePage>
     };
     screenTimeChart();
     return usageWithApps;
+  }*/
+
+  Future<DocumentSnapshot<Map<String, dynamic>>?> getScreenUsage() async {
+    final user = FirebaseAuth.instance.currentUser;
+    DateTime endDate = DateTime.now();
+    final dateString =
+        "${endDate.year}-${endDate.month.toString()}-${endDate.day.toString()}";
+    final docRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user?.uid)
+        .collection('screen_time')
+        .doc(dateString);
+    final doc = await docRef.get();
+    if (doc.exists) return doc;
+    return null;
   }
 
   void screenTimeChart() {
@@ -162,6 +182,17 @@ class _ScreenTimePageState extends State<ScreenTimePage>
       final timeMinutes = timeMs ~/ 60000;
       appName.add(name!);
       appDuration.add(timeMinutes);
+    }
+  }
+
+  Future<void> refreshData() async {
+    /*final granted = await UsageStats.checkUsagePermission();
+    setState(() {
+      hasPermission = granted!;
+    });*/
+    if (hasPermission) {
+      await ScreenTimeManager().fetchTodayUsageStats();
+      setState(() {});
     }
   }
 
@@ -230,68 +261,69 @@ class _ScreenTimePageState extends State<ScreenTimePage>
       body: Center(
         child:
             hasPermission
-                ? FutureBuilder<Map<UsageInfo, AppInfo?>>(
-                  future: fetchTodayUsageStats(),
+                ? FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
+                  future: getScreenUsage(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return CircularProgressIndicator();
                     } else if (snapshot.hasError) {
                       return Text("Error: ${snapshot.error}");
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    } else if (!snapshot.hasData || !snapshot.data!.exists) {
                       return Text("No usage data.");
                     }
 
-                    final usageWithApps = snapshot.data!;
-                    final usageList = usageWithApps.entries.toList();
+                    final usageWithApps = snapshot.data!.data();
+                    final appsList = usageWithApps?['apps'] ?? [];
+                    //final totalMinutes = usageWithApps?['totalMinutes'];
+                    final appNames =
+                        appsList.map((e) => e['name'] ?? 'Uknown').toList();
+                    final durations =
+                        appsList.map((e) {
+                          final time = e['screen_time'] as String;
+                          final match = RegExp(
+                            r'(\d+)h\s+(\d+)m',
+                          ).firstMatch(time);
+                          final hours =
+                              int.tryParse(match?.group(1) ?? '0') ?? 0;
+                          final minutes =
+                              int.tryParse(match?.group(2) ?? '0') ?? 0;
+                          return hours * 60 + minutes;
+                        }).toList();
 
                     return showChart
                         ? Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: UsageChart(
-                            name:
-                                usageList
-                                    .map(
-                                      (e) =>
-                                          e.value?.name ?? e.key.packageName!,
-                                    )
-                                    .toList(),
-                            durations:
-                                usageList.map((e) {
-                                  final millis =
-                                      int.tryParse(
-                                        e.key.totalTimeInForeground ?? '0',
-                                      ) ??
-                                      0;
-                                  return Duration(
-                                    milliseconds: millis,
-                                  ).inMinutes;
-                                }).toList(),
+                            name: List<String>.from(appNames),
+                            durations: List<int>.from(durations),
                           ),
                         )
                         : ListView.builder(
-                          itemCount: usageList.length,
+                          itemCount: appsList.length,
                           itemBuilder: (context, index) {
-                            final usage = usageList[index].key;
-                            final app = usageList[index].value;
-
-                            final durationMs = int.parse(
-                              usage.totalTimeInForeground ?? '0',
-                            );
-                            final duration = Duration(milliseconds: durationMs);
-                            final formattedTime =
-                                "${duration.inHours}h ${(duration.inMinutes % 60)}m";
+                            //final usage = appsList[index].key;
+                            final app = appsList[index];
+                            final icon = app['icon'];
+                            final iconBytes =
+                                icon != null ? base64Decode(icon) : null;
+                            //final durationMs = int.parse(
+                            //usage.totalTimeInForeground ?? '0',
+                            //);
+                            //final duration = Duration(milliseconds: durationMs);
+                            //final formattedTime =
+                            //  "${duration.inHours}h ${(duration.inMinutes % 60)}m";
 
                             return ListTile(
                               leading:
-                                  app?.icon != null
+                                  iconBytes != null
                                       ? Image.memory(
-                                        app!.icon!,
+                                        iconBytes,
                                         width: 40,
                                         height: 40,
                                       )
                                       : Icon(Icons.apps),
-                              title: Text(app?.name ?? usage.packageName!),
-                              subtitle: Text('Usage: $formattedTime'),
+                              title: Text(app['name'] ?? 'unknown'),
+                              subtitle: Text('Usage: ${app['screen_time']}'),
                             );
                           },
                         );

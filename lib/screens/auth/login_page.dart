@@ -1,11 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 //import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:productivity_app/notifications.dart';
 import 'package:productivity_app/screens/auth/register_page.dart';
 import 'package:productivity_app/screens/home_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final Notifications notifications;
+  const LoginPage({super.key, required this.notifications});
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
@@ -13,7 +15,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
+  //late final Notifications notifications;
   @override
   void dispose() {
     _emailController.dispose();
@@ -30,7 +32,9 @@ class _LoginPageState extends State<LoginPage> {
       print('Login successful');
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => MyHomePage()),
+        MaterialPageRoute(
+          builder: (context) => MyHomePage(notifications: widget.notifications),
+        ),
       );
     } on FirebaseAuthException catch (e) {
       print('Login failed'); // TO DO exceptii
@@ -66,7 +70,11 @@ class _LoginPageState extends State<LoginPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const RegisterPage()),
+                  MaterialPageRoute(
+                    builder:
+                        (context) =>
+                            RegisterPage(notifications: widget.notifications),
+                  ),
                 );
               },
               child: Text("Don't have an account?"),

@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:productivity_app/notifications.dart';
 import 'package:productivity_app/screens/auth/login_page.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+  final Notifications notifications;
+  const RegisterPage({super.key, required this.notifications});
   @override
   State<RegisterPage> createState() => _RegisterPageState();
 }
@@ -28,7 +30,9 @@ class _RegisterPageState extends State<RegisterPage> {
       print('Register successful');
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
+        MaterialPageRoute(
+          builder: (context) => LoginPage(notifications: widget.notifications),
+        ),
       );
     } on FirebaseAuthException catch (e) {
       print('Register failed'); // TO DO exceptii
@@ -64,7 +68,11 @@ class _RegisterPageState extends State<RegisterPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                  MaterialPageRoute(
+                    builder:
+                        (context) =>
+                            LoginPage(notifications: widget.notifications),
+                  ),
                 );
               },
               child: Text('Already have an account?'),

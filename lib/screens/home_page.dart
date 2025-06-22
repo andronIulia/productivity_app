@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:productivity_app/notifications.dart';
 import 'package:productivity_app/screens/auth/login_page.dart';
 import 'package:productivity_app/screens/daily_tasks_page.dart';
+import 'package:productivity_app/screens/other_tasks_page.dart';
 import 'package:productivity_app/screens/screen_time.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -82,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
         body: TabBarView(
-          children: [DailyTasksPage(), DailyTasksPage(), ScreenTimePage()],
+          children: [DailyTasksPage(), OtherTasksPage(), ScreenTimePage()],
         ),
       ),
     );

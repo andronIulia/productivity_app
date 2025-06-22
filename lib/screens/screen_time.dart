@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -209,14 +210,32 @@ class _ScreenTimePageState extends State<ScreenTimePage>
                     //print("appsList: ${appsList.length}");
 
                     if (showChart) {
-                      final appNames = appsList.map((e) => e.key).toList();
+                      final appNames =
+                          appsList
+                              .map((e) => e.value['name'] as String? ?? e.key)
+                              .toList();
                       final durations =
                           appsList
                               .map((e) => (e.value['minutes'] as int? ?? 0))
                               .toList();
+                      final appIcons =
+                          appsList.map((e) {
+                            final iconBase64 = e.value['icon'] as String?;
+                            return iconBase64 != null
+                                ? base64Decode(iconBase64)
+                                : Uint8List(0);
+                          }).toList();
+
                       return Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: UsageChart(name: appNames, durations: durations),
+                        child: SizedBox(
+                          height: 300,
+                          child: UsageChartSf(
+                            icons: appIcons,
+                            durations: durations,
+                            names: appNames,
+                          ),
+                        ),
                       );
                     } else {
                       return ListView.builder(

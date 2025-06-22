@@ -1,75 +1,48 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class Task {
-  String title;
-  bool isDone;
-
-  Task({required this.title, this.isDone = false});
-}
-
-class DailyTasksPage extends StatefulWidget {
-  const DailyTasksPage({super.key});
+class OtherTasksPage extends StatefulWidget {
+  const OtherTasksPage({super.key});
   @override
-  State<DailyTasksPage> createState() => _DailyTasksPageState();
+  State<OtherTasksPage> createState() => _OtherTasksPageState();
 }
 
-class _DailyTasksPageState extends State<DailyTasksPage> {
+class _OtherTasksPageState extends State<OtherTasksPage> {
   final TextEditingController _controller = TextEditingController();
-
   String? uid;
-  late final CollectionReference userDailyTasksRef;
-
-  late final Stream<QuerySnapshot> dailyTasksStream;
+  late final CollectionReference userOtherTasksRef;
+  late final Stream<QuerySnapshot> otherTasksStream;
 
   @override
   void initState() {
     super.initState();
     final user = FirebaseAuth.instance.currentUser;
     uid = user!.uid;
-
-    userDailyTasksRef = FirebaseFirestore.instance
+    userOtherTasksRef = FirebaseFirestore.instance
         .collection('users')
         .doc(uid)
-        .collection('tasks');
-
-    dailyTasksStream = userDailyTasksRef.snapshots();
-    resetDailyTasks();
-  }
-
-  Future<void> resetDailyTasks() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-    final todayString = "${now.year}-${now.month}-${now.day}";
-    final lastReset = prefs.getString('lastTaskReset') ?? '';
-    if (lastReset != todayString) {
-      final snapshot = await userDailyTasksRef.get();
-      for (var doc in snapshot.docs) {
-        await userDailyTasksRef.doc(doc.id).update({'isDone': false});
-      }
-      await prefs.setString('lastTaskReset', todayString);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+        .collection('other_tasks');
+    otherTasksStream = userOtherTasksRef.snapshots();
   }
 
   void addTask() {
     final title = _controller.text;
     if (title.isNotEmpty) {
       final taskData = {'title': title, 'isDone': false};
-      userDailyTasksRef.add(taskData);
+      userOtherTasksRef.add(taskData);
       _controller.clear();
     }
   }
 
   void deleteTask(String docId) {
-    userDailyTasksRef.doc(docId).delete();
+    userOtherTasksRef.doc(docId).delete();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -82,7 +55,7 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
             Flexible(
               fit: FlexFit.loose,
               child: StreamBuilder<QuerySnapshot>(
-                stream: dailyTasksStream,
+                stream: otherTasksStream,
                 builder: (
                   BuildContext context,
                   AsyncSnapshot<QuerySnapshot> snapshot,
@@ -94,9 +67,7 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
                     return const Text("Loading");
                   }
                   final taskDocs = snapshot.data!.docs;
-                  if (taskDocs.isEmpty) {
-                    return const Text("No tasks yet");
-                  }
+                  if (taskDocs.isEmpty) return const Text("No tasks yet");
                   return ListView.builder(
                     itemCount: taskDocs.length,
                     itemBuilder: (context, index) {
@@ -107,7 +78,7 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
                         leading: Checkbox(
                           value: isDone,
                           onChanged: (bool? value) {
-                            userDailyTasksRef.doc(doc.id).update({
+                            userOtherTasksRef.doc(doc.id).update({
                               'isDone': value ?? false,
                             });
                           },

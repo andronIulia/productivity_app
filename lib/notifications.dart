@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:productivity_app/notification_ids.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -25,9 +26,17 @@ class Notifications {
       android: initializationSettingsAndroid,
     );
 
+    const AndroidNotificationChannel screenTimeChannel =
+        AndroidNotificationChannel(
+          'screen_time_alerts',
+          'Screen Time Alerts',
+          description: 'Notificări când depășești timpul pe ecran',
+          importance: Importance.high,
+        );
+
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
       'test_channel', // id-ul canalului trebuie să fie unic
-      'cnal tesr',
+      'canal test',
       description: 'merge la munte',
       importance: Importance.high,
     );
@@ -75,88 +84,34 @@ class Notifications {
     print("Notificare apăsată: ${notificationResponse.payload}");
   }
 
-  void displayNotification(String title, String body) async {
-    final now = tz.TZDateTime.now(tz.local);
-    /*tz.TZDateTime scheduled = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      21, //aici poate modific sa primeasca ca argumnet
-      5,
-    );*/
-    final scheduled = now.add(const Duration(seconds: 20));
-    print("Notificare programată pentru: $scheduled");
-    int notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      //0,zone
-      notificationId,
-      title,
-      body,
-      //scheduled,
-      tz.TZDateTime.now(tz.local).add(const Duration(seconds: 30)),
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'test_channel',
-          'cnal tesr',
-          channelDescription: 'merge la munte',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: 'app_icon',
-        ),
+  NotificationDetails _getNotificationDetails(String channelId) {
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        channelId,
+        'Productivity Alerts',
+        channelDescription: 'Notifications for productivity tracking',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: 'app_icon',
+        //color: Colors.blue,
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      payload: 'test_payload',
     );
-    print('Notificare programata');
   }
 
-  Future<bool> hasTasksForToday() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return false;
-    final userDailyTasksRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('tasks');
-    final remainingTasks =
-        await userDailyTasksRef.where('isDone', isEqualTo: false).get();
-    return remainingTasks.docs.isNotEmpty;
-  }
-
-  Future<void> scheduleDailyTasksRemainder() async {
-    final hasTasks = await hasTasksForToday();
-    if (!hasTasks) return;
-
-    final now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduled = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      21, //aici poate modific sa primeasca ca argumnet
-      0,
-    );
-    if (scheduled.isBefore(now)) {
-      scheduled.add(Duration(days: 1));
-    }
-
+  Future<void> showScreenTimeNotification(
+    Duration delay,
+    Duration threshold,
+  ) async {
+    final scheduledTime = tz.TZDateTime.now(tz.local).add(delay);
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      0,
-      '',
-      '',
-      scheduled,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'channelId',
-          'channelName',
-          channelDescription: 'Task-uri zilnice',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: 'app_icon',
-        ),
-      ),
+      NotificationIds.getScreenTimeId(threshold),
+      'Screen Time Alert',
+      'Ai depășit ${threshold.inHours} ore de utilizare!',
+      //tz.TZDateTime.now(tz.local),
+      scheduledTime,
+      _getNotificationDetails('screen_time_alerts'),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
+      payload: 'screen_time_${threshold.inMinutes}',
     );
   }
 }

@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:productivity_app/notification_ids.dart';
 import 'package:productivity_app/notifications.dart';
-import 'package:productivity_app/screens/daily_tasks_page.dart';
+import 'package:productivity_app/screens/auth/screen_time_manager.dart';
 import 'package:productivity_app/screens/task_manger.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationManager {
   final _notifications = Notifications();
   final _tasks = TaskManager();
+  final _screenTimeManager = ScreenTimeManager();
 
   Future<void> init() async {
     await _notifications.init();
@@ -20,7 +21,6 @@ class NotificationManager {
   void setupNotifications() {
     scheduleDailyTasksRemainder();
     scheduleScreenTimeThresholds();
-    scheduleDailyScreenTimeSummary();
     checkDistractingAppsAndNotify();
   }
 
@@ -58,60 +58,6 @@ class NotificationManager {
     debugPrint('Notificare programată pentru: $scheduled');
   }
 
-  Future<void> scheduleDailyScreenTimeSummary() async {
-    final now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduled = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      21,
-      30,
-    );
-    if (scheduled.isBefore(now)) {
-      scheduled = scheduled.add(Duration(days: 1));
-    }
-
-    await _notifications.flutterLocalNotificationsPlugin.zonedSchedule(
-      50,
-      'Rezumat timp pe ecran',
-      await _buildScreenTimeSummaryMessage(),
-      scheduled,
-      _notifications.getNotificationDetails('screen_time_summary'),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-      payload: 'screen_time_summary',
-    );
-  }
-
-  Future<String> _buildScreenTimeSummaryMessage() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return 'Nu există date pentru astăzi.';
-    final now = tz.TZDateTime.now(tz.local);
-    final dateString = "${now.year}-${now.month}-${now.day}";
-    final docRef =
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .collection('screen_time')
-            .doc(dateString)
-            .get();
-    final data = docRef.data();
-    if (data == null) return 'Nu există date pentru astăzi.';
-    final total = data['totalMinutes'] ?? 0;
-    final apps = data['apps'] as Map<String, dynamic>? ?? {};
-    final topApps =
-        apps.entries.toList()..sort(
-          (a, b) =>
-              (b.value['minutes'] as int).compareTo(a.value['minutes'] as int),
-        );
-    final topList = topApps
-        .take(3)
-        .map((e) => '${e.value['name']}: ${e.value['minutes']} min')
-        .join(', ');
-    return 'Total: $total min. Top: $topList';
-  }
-
   Future<void> scheduleScreenTimeThresholds() async {
     for (final threshold in NotificationIds.thresholds) {
       await checkScreenTimeandNotify(threshold);
@@ -119,7 +65,7 @@ class NotificationManager {
   }
 
   Future<void> checkScreenTimeandNotify(Duration threshold) async {
-    final screenTime = await getTodayScreenTime();
+    final screenTime = await _screenTimeManager.getTodayScreenTime();
     debugPrint(
       'Screen time curent: $screenTime minute (Prag: ${threshold.inMinutes} minute)',
     );
@@ -131,21 +77,6 @@ class NotificationManager {
     } else {
       debugPrint('Pragul de ${threshold.inHours} ore NU a fost depășit.');
     }
-  }
-
-  Future<int> getTodayScreenTime() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return 0;
-    final now = tz.TZDateTime.now(tz.local);
-    final dateString = "${now.year}-${now.month}-${now.day}";
-    final docRef =
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(uid)
-            .collection('screen_time')
-            .doc(dateString)
-            .get();
-    return docRef.data()?['totalMinutes'] ?? 0;
   }
 
   Future<void> checkDistractingAppsAndNotify() async {
@@ -173,7 +104,7 @@ class NotificationManager {
       final app = apps[pkg];
       if (app != null && (app['minutes'] ?? 0) >= 30) {
         await _notifications.flutterLocalNotificationsPlugin.show(
-          200 + distractingPackages.indexOf(pkg), // Unique ID per app
+          200 + distractingPackages.indexOf(pkg),
           'Timp mare pe ${app['name']}',
           'Ai petrecut ${app['minutes']} minute pe ${app['name']} azi.',
           _notifications.getNotificationDetails('distracting_app_alert'),

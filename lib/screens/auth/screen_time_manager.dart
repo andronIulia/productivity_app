@@ -101,4 +101,41 @@ class ScreenTimeManager {
       'lastUpdated': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
+
+  Future<Map<String, dynamic>?> getTodayScreenTimeData() async {
+    final now = tz.TZDateTime.now(tz.local);
+    final dateString = "${now.year}-${now.month}-${now.day}";
+    final docRef = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('screen_time')
+        .doc(dateString);
+    final doc = await docRef.get();
+    return doc.exists ? doc.data() : null;
+  }
+
+  Future<int> getTodayScreenTime() async {
+    final data = await getTodayScreenTimeData();
+    return data?['totalMinutes'] ?? 0;
+  }
+
+  Future<Map<String, int>> getScreenTimeForLastNDays(int days) async {
+    final now = DateTime.now();
+    Map<String, int> result = {};
+    for (int i = 0; i < days; i++) {
+      final date = now.subtract(Duration(days: i));
+      final dateString = "${date.year}-${date.month}-${date.day}";
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .collection('screen_time')
+              .doc(dateString)
+              .get();
+      final total = doc.data()?['totalMinutes'] ?? 0;
+      result[dateString] = total;
+    }
+    final sorted = Map.fromEntries(result.entries.toList().reversed);
+    return sorted;
+  }
 }

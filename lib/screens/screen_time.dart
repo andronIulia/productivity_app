@@ -4,13 +4,12 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:installed_apps/index.dart';
 import 'package:productivity_app/screens/auth/screen_time_manager.dart';
 import 'package:productivity_app/screens/usage_chart.dart';
+import 'package:productivity_app/weekly_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'package:usage_stats/usage_stats.dart';
 
 class ScreenTimePage extends StatefulWidget {
@@ -34,29 +33,24 @@ class _ScreenTimePageState extends State<ScreenTimePage>
   bool showChart = false;
 
   late Future<DocumentSnapshot<Map<String, dynamic>>?> updatedUsage;
-
-  late Timer refreshTimer;
+  final screenTimeManager = ScreenTimeManager();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    updatedUsage = getScreenUsage();
     initPermissions();
-    refreshTimer = Timer.periodic(Duration(minutes: 1), (_) => refreshData());
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    refreshTimer.cancel();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && mounted) {
-      //checkPermission();
       refreshData();
     }
   }
@@ -123,21 +117,6 @@ class _ScreenTimePageState extends State<ScreenTimePage>
     }
   }
 
-  Future<DocumentSnapshot<Map<String, dynamic>>?> getScreenUsage() async {
-    final user = FirebaseAuth.instance.currentUser;
-    DateTime endDate = tz.TZDateTime.now(tz.local); //DateTime.now();
-    final dateString =
-        "${endDate.year}-${endDate.month.toString()}-${endDate.day.toString()}";
-    final docRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(user?.uid)
-        .collection('screen_time')
-        .doc(dateString);
-    final doc = await docRef.get();
-    if (doc.exists) return doc;
-    return null;
-  }
-
   void screenTimeChart() {
     appName.clear();
     appDuration.clear();
@@ -161,8 +140,9 @@ class _ScreenTimePageState extends State<ScreenTimePage>
       return;
     }
     if (mounted) setState(() => hasPermission = true);
-    await ScreenTimeManager().fetchTodayUsageStats();
-    updatedUsage = getScreenUsage();
+    //await ScreenTimeManager().fetchTodayUsageStats();
+    //updatedUsage = getScreenUsage();
+    await screenTimeManager.fetchTodayUsageStats();
     if (mounted) setState(() {});
   }
 
@@ -173,10 +153,11 @@ class _ScreenTimePageState extends State<ScreenTimePage>
         title: Text("Screen Time"),
         actions: [
           IconButton(
-            onPressed: () {
+            onPressed: () async {
               setState(() {
                 showChart = !showChart;
               });
+              await refreshData();
             },
             icon: Icon(showChart ? Icons.list : Icons.bar_chart),
           ),
@@ -185,17 +166,17 @@ class _ScreenTimePageState extends State<ScreenTimePage>
       body: Center(
         child:
             hasPermission
-                ? FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
-                  future: updatedUsage,
+                ? FutureBuilder<Map<String, dynamic>?>(
+                  future: screenTimeManager.getTodayScreenTimeData(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return CircularProgressIndicator();
                     } else if (snapshot.hasError) {
                       return Text("Error: ${snapshot.error}");
-                    } else if (!snapshot.hasData || !snapshot.data!.exists) {
+                    } else if (!snapshot.hasData || snapshot.data == null) {
                       return Text("No usage data.");
                     }
-                    final data = snapshot.data!.data() as Map<String, dynamic>;
+                    final data = snapshot.data!;
                     final appsMap = data['apps'] as Map<String, dynamic>? ?? {};
 
                     final appsList =
@@ -204,8 +185,6 @@ class _ScreenTimePageState extends State<ScreenTimePage>
                           final bMinutes = (b.value['minutes'] as int? ?? 0);
                           return bMinutes.compareTo(aMinutes);
                         });
-
-                    //print("appsList: ${appsList.length}");
 
                     if (showChart) {
                       final appNames =
@@ -223,33 +202,70 @@ class _ScreenTimePageState extends State<ScreenTimePage>
                                 ? base64Decode(iconBase64)
                                 : Uint8List(0);
                           }).toList();
-
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 24,
-                        ),
-                        child: Card(
-                          elevation: 3,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SizedBox(
-                                  height: 400,
-                                  child: UsageChartSf(
-                                    icons: appIcons,
-                                    durations: durations,
-                                    names: appNames,
+                      return SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 24,
+                              ),
+                              child: Card(
+                                elevation: 3,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        "Screen time pe aplicații (azi)",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 300,
+                                        child: UsageChartSf(
+                                          icons: appIcons,
+                                          durations: durations,
+                                          names: appNames,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
+                            // Weekly chart
+                            FutureBuilder<Map<String, int>>(
+                              future: screenTimeManager
+                                  .getScreenTimeForLastNDays(7),
+                              builder: (context, weeklySnapshot) {
+                                if (weeklySnapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Padding(
+                                    padding: EdgeInsets.all(24),
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+                                if (!weeklySnapshot.hasData ||
+                                    weeklySnapshot.data!.isEmpty) {
+                                  return const Padding(
+                                    padding: EdgeInsets.all(24),
+                                    child: Text(
+                                      "Nu există date pentru ultimele 7 zile.",
+                                    ),
+                                  );
+                                }
+                                return WeeklyScreenTimeChart(
+                                  data: weeklySnapshot.data!,
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       );
                     } else {

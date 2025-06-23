@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -13,7 +11,7 @@ import 'package:timezone/timezone.dart' as tz;
 class Notifications {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  Future<void> initi() async {
+  Future<void> init() async {
     tz.initializeTimeZones();
     final String tzName = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(tzName));
@@ -26,21 +24,12 @@ class Notifications {
       android: initializationSettingsAndroid,
     );
 
-    const AndroidNotificationChannel screenTimeChannel =
-        AndroidNotificationChannel(
-          'screen_time_alerts',
-          'Screen Time Alerts',
-          description: 'Notificări când depășești timpul pe ecran',
-          importance: Importance.high,
-        );
-
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'test_channel', // id-ul canalului trebuie să fie unic
+      'test_channel',
       'canal test',
       description: 'merge la munte',
       importance: Importance.high,
     );
-    //channel
     final androidFlutterPlugin =
         flutterLocalNotificationsPlugin
             .resolvePlatformSpecificImplementation<
@@ -84,7 +73,7 @@ class Notifications {
     print("Notificare apăsată: ${notificationResponse.payload}");
   }
 
-  NotificationDetails _getNotificationDetails(String channelId) {
+  NotificationDetails getNotificationDetails(String channelId) {
     return NotificationDetails(
       android: AndroidNotificationDetails(
         channelId,
@@ -107,9 +96,8 @@ class Notifications {
       NotificationIds.getScreenTimeId(threshold),
       'Screen Time Alert',
       'Ai depășit ${threshold.inHours} ore de utilizare!',
-      //tz.TZDateTime.now(tz.local),
       scheduledTime,
-      _getNotificationDetails('screen_time_alerts'),
+      getNotificationDetails('screen_time_alerts'),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       payload: 'screen_time_${threshold.inMinutes}',
     );

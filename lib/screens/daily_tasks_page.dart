@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:productivity_app/screens/task_manger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Task {
@@ -18,58 +19,20 @@ class DailyTasksPage extends StatefulWidget {
 
 class _DailyTasksPageState extends State<DailyTasksPage> {
   final TextEditingController _controller = TextEditingController();
-
-  String? uid;
-  late final CollectionReference userDailyTasksRef;
-
+  final _taskManager = TaskManager();
   late final Stream<QuerySnapshot> dailyTasksStream;
 
   @override
   void initState() {
     super.initState();
-    final user = FirebaseAuth.instance.currentUser;
-    uid = user!.uid;
-
-    userDailyTasksRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('tasks');
-
-    dailyTasksStream = userDailyTasksRef.snapshots();
-    resetDailyTasks();
-  }
-
-  Future<void> resetDailyTasks() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-    final todayString = "${now.year}-${now.month}-${now.day}";
-    final lastReset = prefs.getString('lastTaskReset') ?? '';
-    if (lastReset != todayString) {
-      final snapshot = await userDailyTasksRef.get();
-      for (var doc in snapshot.docs) {
-        await userDailyTasksRef.doc(doc.id).update({'isDone': false});
-      }
-      await prefs.setString('lastTaskReset', todayString);
-    }
+    dailyTasksStream = _taskManager.userDailyTasksRef.snapshots();
+    _taskManager.resetDailyTasks();
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-
-  void addTask() {
-    final title = _controller.text;
-    if (title.isNotEmpty) {
-      final taskData = {'title': title, 'isDone': false};
-      userDailyTasksRef.add(taskData);
-      _controller.clear();
-    }
-  }
-
-  void deleteTask(String docId) {
-    userDailyTasksRef.doc(docId).delete();
   }
 
   @override
@@ -107,9 +70,10 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
                         leading: Checkbox(
                           value: isDone,
                           onChanged: (bool? value) {
-                            userDailyTasksRef.doc(doc.id).update({
-                              'isDone': value ?? false,
-                            });
+                            _taskManager.updateDailyTask(
+                              doc.id,
+                              value ?? false,
+                            );
                           },
                         ),
                         title: Text(taskTile),
@@ -132,7 +96,7 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
                                     ElevatedButton(
                                       onPressed: () {
                                         setState(() {
-                                          deleteTask(doc.id);
+                                          _taskManager.deleteDailyTask(doc.id);
                                           Navigator.of(context).pop();
                                         });
                                       },
@@ -155,6 +119,7 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Theme.of(context).colorScheme.primary,
         onPressed: () {
           showDialog(
             context: context,
@@ -177,7 +142,7 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
-                        addTask();
+                        _taskManager.addDailyTask(_controller.text);
                         Navigator.of(context).pop();
                       });
                     },

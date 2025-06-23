@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:productivity_app/notifications.dart';
 import 'package:productivity_app/screens/auth/login_page.dart';
 import 'package:productivity_app/screens/daily_tasks_page.dart';
 import 'package:productivity_app/screens/other_tasks_page.dart';
@@ -38,15 +37,7 @@ class _MyHomePageState extends State<MyHomePage> {
           title: const Text('Task Demo'),
           actions: [
             IconButton(
-              /*onPressed: () async {
-                await FirebaseAuth.instance.signOut();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                );
-              },*/
               onPressed: () {
-                //deleteTask(taskTile);
                 showDialog(
                   context: context,
                   builder: (context) {

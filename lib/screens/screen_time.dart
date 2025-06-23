@@ -75,7 +75,6 @@ class _ScreenTimePageState extends State<ScreenTimePage>
       await refreshData();
     }
     if (!granted) {
-      //prefs = await SharedPreferences.getInstance();
       bool alreadyRequested =
           prefs.getBool('usagePermissionRequested') ?? false;
 
@@ -187,7 +186,6 @@ class _ScreenTimePageState extends State<ScreenTimePage>
         child:
             hasPermission
                 ? FutureBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
-                  //future: getScreenUsage(),
                   future: updatedUsage,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -227,13 +225,30 @@ class _ScreenTimePageState extends State<ScreenTimePage>
                           }).toList();
 
                       return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          height: 300,
-                          child: UsageChartSf(
-                            icons: appIcons,
-                            durations: durations,
-                            names: appNames,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 24,
+                        ),
+                        child: Card(
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  height: 400,
+                                  child: UsageChartSf(
+                                    icons: appIcons,
+                                    durations: durations,
+                                    names: appNames,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );

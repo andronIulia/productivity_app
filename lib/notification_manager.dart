@@ -4,13 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:productivity_app/notification_ids.dart';
 import 'package:productivity_app/notifications.dart';
+import 'package:productivity_app/screens/daily_tasks_page.dart';
+import 'package:productivity_app/screens/task_manger.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationManager {
   final _notifications = Notifications();
+  final _tasks = TaskManager();
 
   Future<void> init() async {
-    await _notifications.initi();
+    await _notifications.init();
     setupNotifications();
   }
 
@@ -25,7 +28,7 @@ class NotificationManager {
     await _notifications.flutterLocalNotificationsPlugin.cancel(
       NotificationIds.dailyTaskReminderId,
     );
-    final hasTasks = await hasTasksForToday();
+    final hasTasks = await _tasks.hasTasksForToday();
     if (!hasTasks) return;
 
     final now = tz.TZDateTime.now(tz.local);
@@ -34,7 +37,7 @@ class NotificationManager {
       now.year,
       now.month,
       now.day,
-      21, //aici poate modific sa primeasca ca argumnet
+      21,
       0,
     );
 
@@ -47,7 +50,7 @@ class NotificationManager {
       'Task-uri neterminate',
       'Mai ai task-uri nefinalizate pentru astazi!',
       scheduled,
-      _getNotificationDetails('task_remainders'),
+      _notifications.getNotificationDetails('task_remainders'),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: 'daily_task_remainder',
@@ -74,7 +77,7 @@ class NotificationManager {
       'Rezumat timp pe ecran',
       await _buildScreenTimeSummaryMessage(),
       scheduled,
-      _getNotificationDetails('screen_time_summary'),
+      _notifications.getNotificationDetails('screen_time_summary'),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: 'screen_time_summary',
@@ -109,40 +112,8 @@ class NotificationManager {
     return 'Total: $total min. Top: $topList';
   }
 
-  NotificationDetails _getNotificationDetails(String channelId) {
-    return NotificationDetails(
-      android: AndroidNotificationDetails(
-        channelId,
-        'Productivity Alerts',
-        channelDescription: 'Notifications for productivity tracking',
-        importance: Importance.high,
-        priority: Priority.high,
-        icon: 'app_icon',
-        //color: Colors.blue,
-      ),
-    );
-  }
-
-  Future<bool> hasTasksForToday() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return false;
-    final userDailyTasksRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('tasks');
-    final remainingTasks =
-        await userDailyTasksRef.where('isDone', isEqualTo: false).get();
-    return remainingTasks.docs.isNotEmpty;
-  }
-
   Future<void> scheduleScreenTimeThresholds() async {
-    const thresholds = [
-      Duration(minutes: 30),
-      Duration(hours: 1),
-      Duration(hours: 2),
-      Duration(hours: 4),
-    ];
-    for (final threshold in thresholds) {
+    for (final threshold in NotificationIds.thresholds) {
       await checkScreenTimeandNotify(threshold);
     }
   }
@@ -205,7 +176,7 @@ class NotificationManager {
           200 + distractingPackages.indexOf(pkg), // Unique ID per app
           'Timp mare pe ${app['name']}',
           'Ai petrecut ${app['minutes']} minute pe ${app['name']} azi.',
-          _getNotificationDetails('distracting_app_alert'),
+          _notifications.getNotificationDetails('distracting_app_alert'),
           payload: 'distracting_app_${app['name']}',
         );
       }

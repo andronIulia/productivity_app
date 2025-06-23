@@ -154,6 +154,7 @@ class UsageChartSf extends StatelessWidget {
           dataSource: List.generate(durations.length, (i) => i),
           xValueMapper: (i, _) => i.toString(),
           yValueMapper: (i, _) => durations[i],
+          color: Theme.of(context).colorScheme.primary,
           dataLabelSettings: const DataLabelSettings(isVisible: false),
         ),
       ],
@@ -180,7 +181,7 @@ class UsageChartSf extends StatelessWidget {
         return CartesianChartAnnotation(
           widget:
               icons[index].isNotEmpty
-                  ? Image.memory(icons[index], width: 28, height: 28)
+                  ? Image.memory(icons[index], width: 20, height: 20)
                   : Icon(Icons.apps, size: 28, color: Colors.grey),
           coordinateUnit: CoordinateUnit.point,
           region: AnnotationRegion.chart,

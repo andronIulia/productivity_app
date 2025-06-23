@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:productivity_app/screens/task_manger.dart';
 
 class OtherTasksPage extends StatefulWidget {
   const OtherTasksPage({super.key});
@@ -10,33 +11,13 @@ class OtherTasksPage extends StatefulWidget {
 
 class _OtherTasksPageState extends State<OtherTasksPage> {
   final TextEditingController _controller = TextEditingController();
-  String? uid;
-  late final CollectionReference userOtherTasksRef;
+  final _taskManager = TaskManager();
   late final Stream<QuerySnapshot> otherTasksStream;
 
   @override
   void initState() {
     super.initState();
-    final user = FirebaseAuth.instance.currentUser;
-    uid = user!.uid;
-    userOtherTasksRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('other_tasks');
-    otherTasksStream = userOtherTasksRef.snapshots();
-  }
-
-  void addTask() {
-    final title = _controller.text;
-    if (title.isNotEmpty) {
-      final taskData = {'title': title, 'isDone': false};
-      userOtherTasksRef.add(taskData);
-      _controller.clear();
-    }
-  }
-
-  void deleteTask(String docId) {
-    userOtherTasksRef.doc(docId).delete();
+    otherTasksStream = _taskManager.userOtherTasksRef.snapshots();
   }
 
   @override
@@ -78,9 +59,10 @@ class _OtherTasksPageState extends State<OtherTasksPage> {
                         leading: Checkbox(
                           value: isDone,
                           onChanged: (bool? value) {
-                            userOtherTasksRef.doc(doc.id).update({
-                              'isDone': value ?? false,
-                            });
+                            _taskManager.updateOtherTask(
+                              doc.id,
+                              value ?? false,
+                            );
                           },
                         ),
                         title: Text(taskTile),
@@ -103,7 +85,7 @@ class _OtherTasksPageState extends State<OtherTasksPage> {
                                     ElevatedButton(
                                       onPressed: () {
                                         setState(() {
-                                          deleteTask(doc.id);
+                                          _taskManager.deleteOtherTask(doc.id);
                                           Navigator.of(context).pop();
                                         });
                                       },
@@ -126,6 +108,7 @@ class _OtherTasksPageState extends State<OtherTasksPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Theme.of(context).colorScheme.primary,
         onPressed: () {
           showDialog(
             context: context,
@@ -148,7 +131,7 @@ class _OtherTasksPageState extends State<OtherTasksPage> {
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
-                        addTask();
+                        _taskManager.addOtherTask(_controller.text);
                         Navigator.of(context).pop();
                       });
                     },

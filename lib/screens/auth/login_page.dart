@@ -1,6 +1,7 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:productivity_app/screens/auth/auth_manager.dart';
 import 'package:productivity_app/screens/auth/register_page.dart';
 import 'package:productivity_app/screens/home_page.dart';
 
@@ -11,6 +12,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final AuthManager _authManager = AuthManager();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -29,10 +31,7 @@ class _LoginPageState extends State<LoginPage> {
     final password = _passwordController.text.trim();
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await _authManager.login(email, password);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => MyHomePage()),
@@ -44,8 +43,6 @@ class _LoginPageState extends State<LoginPage> {
       String msg = 'Login failed';
       if (e.code == 'user-not-found') {
         msg = 'No user found for that email.';
-      } else if (e.code == 'wrong-password') {
-        msg = 'Incorrect password.';
       } else if (e.code == 'invalid-email') {
         msg = 'Invalid email address.';
       }

@@ -1,6 +1,7 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:productivity_app/screens/auth/auth_manager.dart';
 import 'package:productivity_app/screens/auth/login_page.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -10,10 +11,12 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final AuthManager _authManager = AuthManager();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscureText = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -27,17 +30,24 @@ class _RegisterPageState extends State<RegisterPage> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      print('Register successful');
+      await _authManager.register(email, password);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginPage()),
       );
+      setState(() {
+        _errorMessage = null;
+      });
     } on FirebaseAuthException catch (e) {
-      print('Register failed'); // TO DO exceptii
+      String msg = 'Registration failed';
+      if (e.code == 'email-already-exists') {
+        msg = 'This email is already registered.';
+      } else if (e.code == 'invalid-email') {
+        msg = 'Invalid email address.';
+      }
+      setState(() {
+        _errorMessage = msg;
+      });
     }
   }
 
@@ -123,6 +133,17 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
                     ),
                     const SizedBox(height: 24),
+                    if (_errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 50),

@@ -6,9 +6,9 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:installed_apps/index.dart';
-import 'package:productivity_app/screens/auth/screen_time_manager.dart';
-import 'package:productivity_app/screens/usage_chart.dart';
-import 'package:productivity_app/weekly_chart.dart';
+import 'package:productivity_app/services/screen_time_manager.dart';
+import 'package:productivity_app/widgets/usage_chart.dart';
+import 'package:productivity_app/widgets/weekly_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:usage_stats/usage_stats.dart';
 

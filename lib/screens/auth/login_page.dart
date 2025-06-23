@@ -1,7 +1,7 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:productivity_app/screens/auth/auth_manager.dart';
+import 'package:productivity_app/services/auth_manager.dart';
 import 'package:productivity_app/screens/auth/register_page.dart';
 import 'package:productivity_app/screens/home_page.dart';
 

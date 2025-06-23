@@ -2,7 +2,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:productivity_app/notification_manager.dart';
+import 'package:productivity_app/services/notification_manager.dart';
 import 'package:productivity_app/screens/auth/login_page.dart';
 import 'package:productivity_app/screens/home_page.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -89,7 +89,6 @@ class MyApp extends StatelessWidget {
 }
 
 class UserApp extends StatelessWidget {
-  //final Notifications notifications;
   const UserApp({super.key});
 
   @override

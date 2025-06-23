@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:productivity_app/screens/task_manger.dart';
+import 'package:productivity_app/services/task_manger.dart';
 
 class OtherTasksPage extends StatefulWidget {
   const OtherTasksPage({super.key});

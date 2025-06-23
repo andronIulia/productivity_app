@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:productivity_app/notification_ids.dart';
-import 'package:productivity_app/notifications.dart';
-import 'package:productivity_app/screens/auth/screen_time_manager.dart';
-import 'package:productivity_app/screens/task_manger.dart';
+import 'package:productivity_app/notifications/notification_ids.dart';
+import 'package:productivity_app/notifications/notifications.dart';
+import 'package:productivity_app/services/screen_time_manager.dart';
+import 'package:productivity_app/services/task_manger.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationManager {

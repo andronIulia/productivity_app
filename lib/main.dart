@@ -6,13 +6,33 @@ import 'package:productivity_app/services/notification_manager.dart';
 import 'package:productivity_app/screens/auth/login_page.dart';
 import 'package:productivity_app/screens/home_page.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:workmanager/workmanager.dart';
+
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    final notificationManager = NotificationManager();
+    await notificationManager.init();
+    //notificationManager.setupNotifications();
+    return Future.value(true);
+  });
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   tz.initializeTimeZones();
-  final notificationManager = NotificationManager();
-  await notificationManager.init();
+  //final notificationManager = NotificationManager();
+  //await notificationManager.init();
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode:
+        false, // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+  );
+  Workmanager().registerPeriodicTask(
+    "screenTimeNotification",
+    "ScreenTimeNotification",
+    frequency: const Duration(minutes: 10),
+  );
   runApp(const MyApp());
 }
 

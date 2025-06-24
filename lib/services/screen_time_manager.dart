@@ -105,7 +105,7 @@ class ScreenTimeManager {
   Future<Map<String, dynamic>?> getTodayScreenTimeData() async {
     final now = tz.TZDateTime.now(tz.local);
     final dateString = "${now.year}-${now.month}-${now.day}";
-    final docRef = await FirebaseFirestore.instance
+    final docRef = FirebaseFirestore.instance
         .collection('users')
         .doc(uid)
         .collection('screen_time')

@@ -6,7 +6,6 @@ import 'package:productivity_app/screens/other_tasks_page.dart';
 import 'package:productivity_app/screens/screen_time.dart';
 
 class MyHomePage extends StatefulWidget {
-  //final Notifications notifications;
   const MyHomePage({super.key});
 
   @override
@@ -15,9 +14,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   @override
-  initState() {
+  void initState() {
     super.initState();
-    //widget.notifications.displayNotification('Salut!', 'Test notificare');
   }
 
   @override
@@ -40,22 +38,23 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 showDialog(
                   context: context,
-                  builder: (context) {
+                  builder: (dialogContext) {
                     return AlertDialog(
                       title: Text('Log out'),
                       content: Text('Do you want to log out?'),
                       actions: [
                         TextButton(
                           onPressed: () {
-                            Navigator.of(context).pop();
+                            Navigator.of(dialogContext).pop();
                           },
                           child: const Text('Cancel'),
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            Navigator.of(context).pop();
+                            Navigator.of(dialogContext).pop();
                             await FirebaseAuth.instance.signOut();
-                            Navigator.push(
+                            if (!context.mounted) return;
+                            Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => LoginPage(),

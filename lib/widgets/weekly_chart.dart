@@ -22,14 +22,18 @@ class WeeklyScreenTimeChart extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(
-              height: 220,
+              height: 300,
               child: SfCartesianChart(
+                tooltipBehavior: TooltipBehavior(enable: true),
                 primaryXAxis: CategoryAxis(
                   labelRotation: -45,
                   labelStyle: const TextStyle(fontSize: 12),
                 ),
                 primaryYAxis: NumericAxis(
                   labelStyle: const TextStyle(fontSize: 12),
+                  maximum:
+                      (totals.reduce((a, b) => a > b ? a : b) * 1.2)
+                          .ceilToDouble(),
                 ),
                 series: <CartesianSeries>[
                   ColumnSeries<int, String>(
@@ -40,7 +44,25 @@ class WeeklyScreenTimeChart extends StatelessWidget {
                     },
                     yValueMapper: (i, _) => totals[i],
                     color: Theme.of(context).colorScheme.primary,
-                    dataLabelSettings: const DataLabelSettings(isVisible: true),
+                    dataLabelSettings: const DataLabelSettings(
+                      isVisible: true,
+                      overflowMode: OverflowMode.shift,
+                      textStyle: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      //labelAlignment: ChartDataLabelAlignment.top,
+                    ),
+                    dataLabelMapper: (i, _) {
+                      final total = totals[i];
+                      final hours = total ~/ 60;
+                      final minutes = total % 60;
+                      if (hours > 0) {
+                        return "${hours}h${minutes > 0 ? ' ${minutes}m' : ''}";
+                      } else {
+                        return "${minutes}m";
+                      }
+                    },
                   ),
                 ],
               ),

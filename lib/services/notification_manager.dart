@@ -98,13 +98,13 @@ class NotificationManager {
       'com.instagram.android',
       'com.facebook.katana',
       'com.tiktok.android',
-      'com.x.twitter.android',
+      'com.twitter.android',
     ];
-    for (final pkg in distractingPackages) {
-      final app = apps[pkg];
+    for (final package in distractingPackages) {
+      final app = apps[package];
       if (app != null && (app['minutes'] ?? 0) >= 30) {
         await _notifications.flutterLocalNotificationsPlugin.show(
-          200 + distractingPackages.indexOf(pkg),
+          200 + distractingPackages.indexOf(package),
           'Timp mare pe ${app['name']}',
           'Ai petrecut ${app['minutes']} minute pe ${app['name']} azi.',
           _notifications.getNotificationDetails('distracting_app_alert'),

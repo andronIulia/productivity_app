@@ -157,7 +157,7 @@ class _ScreenTimePageState extends State<ScreenTimePage>
               setState(() {
                 showChart = !showChart;
               });
-              await refreshData();
+              //await refreshData();
             },
             icon: Icon(showChart ? Icons.list : Icons.bar_chart),
           ),
@@ -239,31 +239,36 @@ class _ScreenTimePageState extends State<ScreenTimePage>
                                 ),
                               ),
                             ),
-                            // Weekly chart
-                            FutureBuilder<Map<String, int>>(
-                              future: screenTimeManager
-                                  .getScreenTimeForLastNDays(7),
-                              builder: (context, weeklySnapshot) {
-                                if (weeklySnapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(24),
-                                    child: CircularProgressIndicator(),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 0,
+                              ),
+                              child: FutureBuilder<Map<String, int>>(
+                                future: screenTimeManager
+                                    .getScreenTimeForLastNDays(7),
+                                builder: (context, weeklySnapshot) {
+                                  if (weeklySnapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Padding(
+                                      padding: EdgeInsets.all(24),
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  }
+                                  if (!weeklySnapshot.hasData ||
+                                      weeklySnapshot.data!.isEmpty) {
+                                    return const Padding(
+                                      padding: EdgeInsets.all(24),
+                                      child: Text(
+                                        "Nu există date pentru ultimele 7 zile.",
+                                      ),
+                                    );
+                                  }
+                                  return WeeklyScreenTimeChart(
+                                    data: weeklySnapshot.data!,
                                   );
-                                }
-                                if (!weeklySnapshot.hasData ||
-                                    weeklySnapshot.data!.isEmpty) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(24),
-                                    child: Text(
-                                      "Nu există date pentru ultimele 7 zile.",
-                                    ),
-                                  );
-                                }
-                                return WeeklyScreenTimeChart(
-                                  data: weeklySnapshot.data!,
-                                );
-                              },
+                                },
+                              ),
                             ),
                           ],
                         ),

@@ -51,7 +51,6 @@ class WeeklyScreenTimeChart extends StatelessWidget {
                         fontSize: 8,
                         fontWeight: FontWeight.bold,
                       ),
-                      //labelAlignment: ChartDataLabelAlignment.top,
                     ),
                     dataLabelMapper: (i, _) {
                       final total = totals[i];

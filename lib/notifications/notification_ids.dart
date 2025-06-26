@@ -15,6 +15,7 @@ class NotificationIds {
   }
 
   static const thresholds = [
+    Duration(minutes: 1),
     Duration(minutes: 30),
     Duration(hours: 1),
     Duration(hours: 2),

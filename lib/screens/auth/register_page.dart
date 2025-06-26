@@ -1,4 +1,3 @@
-import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:productivity_app/services/auth_manager.dart';
@@ -25,7 +24,7 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  Future<void> register() async {
+  Future<void> _register() async {
     if (_formKey.currentState?.validate() != true) return;
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -92,14 +91,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                       keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        } else if (!EmailValidator.validate(value.trim())) {
-                          return 'Invalid email';
-                        }
-                        return null;
-                      },
+                      validator: AuthManager.validateEmail,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -124,14 +116,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                       obscureText: _obscureText,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        } else if (value.trim().length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
+                      validator: AuthManager.validatePassword,
                     ),
                     const SizedBox(height: 24),
                     if (_errorMessage != null)
@@ -154,7 +139,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       onPressed: () {
                         setState(() {
-                          register();
+                          _register();
                         });
                       },
                       child: const Text('Register'),

@@ -1,9 +1,9 @@
-import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:productivity_app/services/auth_manager.dart';
 import 'package:productivity_app/screens/auth/register_page.dart';
 import 'package:productivity_app/screens/home_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -32,6 +32,13 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       await _authManager.login(email, password);
+
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('uid', uid);
+      }
+
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -95,14 +102,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       keyboardType: TextInputType.emailAddress,
 
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        } else if (!EmailValidator.validate(value.trim())) {
-                          return 'Inavlid email';
-                        }
-                        return null;
-                      },
+                      validator: AuthManager.validateEmail,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -127,14 +127,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       obscureText: _obscureText,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        } else if (value.trim().length < 6) {
-                          return 'Password must be at lest 6 characters';
-                        }
-                        return null;
-                      },
+                      validator: AuthManager.validatePassword,
                     ),
                     const SizedBox(height: 24),
                     if (_errorMessage != null)

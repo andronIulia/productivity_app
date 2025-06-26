@@ -5,14 +5,25 @@ import 'package:flutter/material.dart';
 import 'package:productivity_app/services/notification_manager.dart';
 import 'package:productivity_app/screens/auth/login_page.dart';
 import 'package:productivity_app/screens/home_page.dart';
+import 'package:productivity_app/services/screen_time_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:workmanager/workmanager.dart';
 
+@pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
+    await Firebase.initializeApp();
+    tz.initializeTimeZones();
+
+    final prefs = await SharedPreferences.getInstance();
+    final uid = prefs.getString('uid');
+    //if (uid != null) {
+    final screenTimeManager = ScreenTimeManager();
+    await screenTimeManager.fetchTodayUsageStats(overrideUid: uid);
+
     final notificationManager = NotificationManager();
     await notificationManager.init();
-    //notificationManager.setupNotifications();
     return Future.value(true);
   });
 }
@@ -21,17 +32,23 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   tz.initializeTimeZones();
-  //final notificationManager = NotificationManager();
-  //await notificationManager.init();
-  Workmanager().initialize(
-    callbackDispatcher,
-    isInDebugMode:
-        false, // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
-  );
-  Workmanager().registerPeriodicTask(
-    "screenTimeNotification",
-    "ScreenTimeNotification",
-    frequency: const Duration(minutes: 10),
+
+  final notificationManager = NotificationManager();
+  await notificationManager.init();
+  await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
+
+  await Workmanager().registerPeriodicTask(
+    "screenTimeTask",
+    "screenTimeTask",
+    frequency: const Duration(minutes: 15),
+    initialDelay: const Duration(minutes: 1),
+    constraints: Constraints(
+      networkType: NetworkType.not_required,
+      requiresBatteryNotLow: false,
+      requiresCharging: false,
+      requiresDeviceIdle: false,
+      requiresStorageNotLow: false,
+    ),
   );
   runApp(const MyApp());
 }

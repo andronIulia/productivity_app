@@ -6,6 +6,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:productivity_app/notifications/notification_ids.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/standalone.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class Notifications {
@@ -27,7 +28,7 @@ class Notifications {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
       'test_channel',
       'canal test',
-      description: 'merge la munte',
+      description: 'Canal pentru notificări',
       importance: Importance.high,
     );
     final androidFlutterPlugin =
@@ -82,8 +83,20 @@ class Notifications {
         importance: Importance.high,
         priority: Priority.high,
         icon: 'app_icon',
-        //color: Colors.blue,
       ),
+    );
+  }
+
+  Future<void> showDailyTaskReminder(TZDateTime scheduled) async {
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      NotificationIds.dailyTaskReminderId,
+      'Task-uri neterminate',
+      'Mai ai task-uri nefinalizate pentru astazi!',
+      scheduled,
+      getNotificationDetails('test_channel'),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: 'daily_task_remainder',
     );
   }
 
@@ -97,9 +110,23 @@ class Notifications {
       'Screen Time Alert',
       'Ai depășit ${threshold.inHours} ore de utilizare!',
       scheduledTime,
-      getNotificationDetails('screen_time_alerts'),
+      getNotificationDetails('test_channel'),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       payload: 'screen_time_${threshold.inMinutes}',
+    );
+  }
+
+  Future<void> showDistractingAppNotification({
+    required String appName,
+    required int minutes,
+    required int id,
+  }) async {
+    await flutterLocalNotificationsPlugin.show(
+      id,
+      'Timp mare pe $appName',
+      'Ai petrecut $minutes minute pe $appName azi.',
+      getNotificationDetails('test_channel'),
+      payload: 'distracting_app_$appName',
     );
   }
 }

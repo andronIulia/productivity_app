@@ -1,13 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:productivity_app/services/task_manger.dart';
-
-class Task {
-  String title;
-  bool isDone;
-
-  Task({required this.title, this.isDone = false});
-}
+import 'package:productivity_app/services/task_manager.dart';
+import 'package:productivity_app/models/task.dart';
 
 class DailyTasksPage extends StatefulWidget {
   const DailyTasksPage({super.key});
@@ -58,30 +52,30 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
                   if (taskDocs.isEmpty) {
                     return const Text("No tasks yet");
                   }
+                  final tasks =
+                      taskDocs.map((doc) => Task.fromDoc(doc)).toList();
                   return ListView.builder(
-                    itemCount: taskDocs.length,
+                    itemCount: tasks.length,
                     itemBuilder: (context, index) {
-                      final doc = taskDocs[index];
-                      final taskTile = doc['title'];
-                      final isDone = doc['isDone'];
+                      final task = tasks[index];
                       return ListTile(
                         leading: Checkbox(
-                          value: isDone,
+                          value: task.isDone,
                           onChanged: (bool? value) {
                             _taskManager.updateDailyTask(
-                              doc.id,
+                              task.id,
                               value ?? false,
                             );
                           },
                         ),
-                        title: Text(taskTile),
+                        title: Text(task.title),
                         trailing: IconButton(
                           onPressed: () {
                             showDialog(
                               context: context,
                               builder: (context) {
                                 return AlertDialog(
-                                  title: Text(
+                                  title: const Text(
                                     'Do you want to delete the task?',
                                   ),
                                   actions: [
@@ -94,7 +88,7 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
                                     ElevatedButton(
                                       onPressed: () {
                                         setState(() {
-                                          _taskManager.deleteDailyTask(doc.id);
+                                          _taskManager.deleteDailyTask(task.id);
                                           Navigator.of(context).pop();
                                         });
                                       },
@@ -105,7 +99,7 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
                               },
                             );
                           },
-                          icon: Icon(Icons.delete),
+                          icon: const Icon(Icons.delete),
                         ),
                       );
                     },

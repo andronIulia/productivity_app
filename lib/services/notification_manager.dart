@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:productivity_app/notifications/notification_ids.dart';
 import 'package:productivity_app/notifications/notifications.dart';
 import 'package:productivity_app/services/screen_time_manager.dart';
-import 'package:productivity_app/services/task_manger.dart';
+import 'package:productivity_app/services/task_manager.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationManager {
@@ -45,17 +43,8 @@ class NotificationManager {
       scheduled = scheduled.add(Duration(days: 1));
     }
 
-    await _notifications.flutterLocalNotificationsPlugin.zonedSchedule(
-      NotificationIds.dailyTaskReminderId,
-      'Task-uri neterminate',
-      'Mai ai task-uri nefinalizate pentru astazi!',
-      scheduled,
-      _notifications.getNotificationDetails('task_remainders'),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-      payload: 'daily_task_remainder',
-    );
-    debugPrint('Notificare programată pentru: $scheduled');
+    await _notifications.showDailyTaskReminder(scheduled);
+    print('Notificare programată pentru: $scheduled');
   }
 
   Future<void> scheduleScreenTimeThresholds() async {
@@ -66,16 +55,16 @@ class NotificationManager {
 
   Future<void> checkScreenTimeandNotify(Duration threshold) async {
     final screenTime = await _screenTimeManager.getTodayScreenTime();
-    debugPrint(
+    print(
       'Screen time curent: $screenTime minute (Prag: ${threshold.inMinutes} minute)',
     );
     if (screenTime >= threshold.inMinutes &&
         screenTime < threshold.inMinutes + 30) {
       const delay = Duration(minutes: 2);
       await _notifications.showScreenTimeNotification(delay, threshold);
-      debugPrint('Notificare trimisă pentru ${threshold.inHours} ore');
+      print('Notificare trimisă pentru ${threshold.inHours} ore');
     } else {
-      debugPrint('Pragul de ${threshold.inHours} ore NU a fost depășit.');
+      print('Pragul de ${threshold.inHours} ore NU a fost depășit.');
     }
   }
 
@@ -103,12 +92,10 @@ class NotificationManager {
     for (final package in distractingPackages) {
       final app = apps[package];
       if (app != null && (app['minutes'] ?? 0) >= 30) {
-        await _notifications.flutterLocalNotificationsPlugin.show(
-          200 + distractingPackages.indexOf(package),
-          'Timp mare pe ${app['name']}',
-          'Ai petrecut ${app['minutes']} minute pe ${app['name']} azi.',
-          _notifications.getNotificationDetails('distracting_app_alert'),
-          payload: 'distracting_app_${app['name']}',
+        await _notifications.showDistractingAppNotification(
+          appName: app['name'],
+          minutes: app['minutes'],
+          id: 200 + distractingPackages.indexOf(package),
         );
       }
     }

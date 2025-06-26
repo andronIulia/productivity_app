@@ -32,7 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Tab(text: "Screen time"),
             ],
           ),
-          title: const Text('Task Demo'),
+          title: const Text('Productivity App'),
           actions: [
             IconButton(
               onPressed: () {

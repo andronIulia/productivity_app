@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:productivity_app/services/task_manger.dart';
+import 'package:productivity_app/services/task_manager.dart';
+import 'package:productivity_app/models/task.dart';
 
 class OtherTasksPage extends StatefulWidget {
   const OtherTasksPage({super.key});
@@ -48,30 +49,30 @@ class _OtherTasksPageState extends State<OtherTasksPage> {
                   }
                   final taskDocs = snapshot.data!.docs;
                   if (taskDocs.isEmpty) return const Text("No tasks yet");
+                  final tasks =
+                      taskDocs.map((doc) => Task.fromDoc(doc)).toList();
                   return ListView.builder(
-                    itemCount: taskDocs.length,
+                    itemCount: tasks.length,
                     itemBuilder: (context, index) {
-                      final doc = taskDocs[index];
-                      final taskTile = doc['title'];
-                      final isDone = doc['isDone'];
+                      final task = tasks[index];
                       return ListTile(
                         leading: Checkbox(
-                          value: isDone,
+                          value: task.isDone,
                           onChanged: (bool? value) {
                             _taskManager.updateOtherTask(
-                              doc.id,
+                              task.id,
                               value ?? false,
                             );
                           },
                         ),
-                        title: Text(taskTile),
+                        title: Text(task.title),
                         trailing: IconButton(
                           onPressed: () {
                             showDialog(
                               context: context,
                               builder: (context) {
                                 return AlertDialog(
-                                  title: Text(
+                                  title: const Text(
                                     'Do you want to delete the task?',
                                   ),
                                   actions: [
@@ -84,7 +85,7 @@ class _OtherTasksPageState extends State<OtherTasksPage> {
                                     ElevatedButton(
                                       onPressed: () {
                                         setState(() {
-                                          _taskManager.deleteOtherTask(doc.id);
+                                          _taskManager.deleteOtherTask(task.id);
                                           Navigator.of(context).pop();
                                         });
                                       },
@@ -95,7 +96,7 @@ class _OtherTasksPageState extends State<OtherTasksPage> {
                               },
                             );
                           },
-                          icon: Icon(Icons.delete),
+                          icon: const Icon(Icons.delete),
                         ),
                       );
                     },

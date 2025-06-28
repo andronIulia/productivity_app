@@ -48,7 +48,14 @@ class _OtherTasksPageState extends State<OtherTasksPage> {
                     return const Text("Loading");
                   }
                   final taskDocs = snapshot.data!.docs;
-                  if (taskDocs.isEmpty) return const Text("No tasks yet");
+                  if (taskDocs.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        "No tasks yet",
+                        style: TextStyle(fontSize: 28, color: Colors.grey),
+                      ),
+                    );
+                  }
                   final tasks =
                       taskDocs.map((doc) => Task.fromDoc(doc)).toList();
                   return ListView.builder(
@@ -132,6 +139,7 @@ class _OtherTasksPageState extends State<OtherTasksPage> {
                     onPressed: () {
                       setState(() {
                         _taskManager.addOtherTask(_controller.text);
+                        _controller.clear();
                         Navigator.of(context).pop();
                       });
                     },

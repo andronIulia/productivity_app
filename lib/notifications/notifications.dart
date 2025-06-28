@@ -27,8 +27,8 @@ class Notifications {
 
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
       'test_channel',
-      'canal test',
-      description: 'Canal pentru notificări',
+      'test channel',
+      description: 'Channel for testing notifications',
       importance: Importance.high,
     );
     final androidFlutterPlugin =
@@ -59,7 +59,7 @@ class Notifications {
         await androidFlutterPlugin?.canScheduleExactNotifications() ?? false;
 
     if (!canScheduleExactAlarms) {
-      debugPrint('permisiune exact alarms nu e acordata ');
+      debugPrint('Alarm and exact scheduling permissions are required.');
       await androidFlutterPlugin?.requestExactAlarmsPermission();
     }
   }

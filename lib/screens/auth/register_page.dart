@@ -137,10 +137,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _register();
-                        });
+                      onPressed: () async {
+                        await _register();
                       },
                       child: const Text('Register'),
                     ),

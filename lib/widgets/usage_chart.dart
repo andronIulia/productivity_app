@@ -3,12 +3,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-class UsageChartSf extends StatelessWidget {
+class UsageChart extends StatelessWidget {
   final List<Uint8List> icons;
   final List<int> durations;
   final List<String> names;
 
-  const UsageChartSf({
+  const UsageChart({
     super.key,
     required this.icons,
     required this.durations,

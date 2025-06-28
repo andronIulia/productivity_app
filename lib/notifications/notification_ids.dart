@@ -9,13 +9,12 @@ class NotificationIds {
   static const screenTime7HoursId = 7;
   static const screenTime8HoursId = 8;
 
-  static const hourlyUpdateId = 5;
+  //static const hourlyUpdateId = 10;
   static int getScreenTimeId(Duration threshold) {
     return thresholds.indexOf(threshold) + 1;
   }
 
   static const thresholds = [
-    Duration(minutes: 1),
     Duration(minutes: 30),
     Duration(hours: 1),
     Duration(hours: 2),

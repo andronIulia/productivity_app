@@ -50,7 +50,12 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
                   }
                   final taskDocs = snapshot.data!.docs;
                   if (taskDocs.isEmpty) {
-                    return const Text("No tasks yet");
+                    return const Center(
+                      child: Text(
+                        "No tasks yet",
+                        style: TextStyle(fontSize: 28, color: Colors.grey),
+                      ),
+                    );
                   }
                   final tasks =
                       taskDocs.map((doc) => Task.fromDoc(doc)).toList();
@@ -135,6 +140,7 @@ class _DailyTasksPageState extends State<DailyTasksPage> {
                     onPressed: () {
                       setState(() {
                         _taskManager.addDailyTask(_controller.text);
+                        _controller.clear();
                         Navigator.of(context).pop();
                       });
                     },

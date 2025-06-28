@@ -172,10 +172,8 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _login();
-                        });
+                      onPressed: () async {
+                        await _login();
                       },
                       child: const Text('Login'),
                     ),

@@ -25,7 +25,6 @@ class _ScreenTimePageState extends State<ScreenTimePage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initPermissions();
-    _refreshData();
   }
 
   @override
@@ -43,10 +42,13 @@ class _ScreenTimePageState extends State<ScreenTimePage>
 
   Future<void> _initPermissions() async {
     final granted = await UsagePermissionHelper.checkPermission();
+    if (!mounted) return;
     setState(() => hasPermission = granted);
-    if (!granted && mounted) {
+    if (!granted) {
       await UsagePermissionHelper.showPermissionDialog(context);
+      if (!mounted) return;
       final grantedAfter = await UsagePermissionHelper.checkPermission();
+      if (!mounted) return;
       setState(() => hasPermission = grantedAfter);
     }
     if (hasPermission) {
@@ -57,9 +59,11 @@ class _ScreenTimePageState extends State<ScreenTimePage>
   Future<void> _refreshData() async {
     if (!mounted) return;
     final granted = await UsagePermissionHelper.checkPermission();
+    if (!mounted) return;
     setState(() => hasPermission = granted);
     if (granted) {
       await screenTimeManager.fetchTodayUsageStats();
+      if (!mounted) return;
       setState(() {});
     }
   }
@@ -121,14 +125,14 @@ class _ScreenTimePageState extends State<ScreenTimePage>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       const Text(
-                                        "Screen time pe aplicații (azi)",
+                                        "Today's app usage",
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       SizedBox(
                                         height: 300,
-                                        child: UsageChartSf(
+                                        child: UsageChart(
                                           icons: appIcons,
                                           durations: durations,
                                           names: appNames,
@@ -144,30 +148,54 @@ class _ScreenTimePageState extends State<ScreenTimePage>
                                 horizontal: 16,
                                 vertical: 0,
                               ),
-                              child: FutureBuilder<Map<String, int>>(
-                                future: screenTimeManager
-                                    .getScreenTimeForLastNDays(7),
-                                builder: (context, weeklySnapshot) {
-                                  if (weeklySnapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return const Padding(
-                                      padding: EdgeInsets.all(24),
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  }
-                                  if (!weeklySnapshot.hasData ||
-                                      weeklySnapshot.data!.isEmpty) {
-                                    return const Padding(
-                                      padding: EdgeInsets.all(24),
-                                      child: Text(
-                                        "Nu există date pentru ultimele 7 zile.",
+                              child: Card(
+                                elevation: 3,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    children: [
+                                      const Text(
+                                        "Total screen time in the last 7 days",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    );
-                                  }
-                                  return WeeklyScreenTimeChart(
-                                    data: weeklySnapshot.data!,
-                                  );
-                                },
+                                      SizedBox(
+                                        height: 300,
+                                        child: FutureBuilder<Map<String, int>>(
+                                          future: screenTimeManager
+                                              .getScreenTimeForLastNDays(7),
+                                          builder: (context, weeklySnapshot) {
+                                            if (weeklySnapshot
+                                                    .connectionState ==
+                                                ConnectionState.waiting) {
+                                              return const Padding(
+                                                padding: EdgeInsets.all(24),
+                                                //child:
+                                                //CircularProgressIndicator(),
+                                              );
+                                            }
+                                            if (!weeklySnapshot.hasData ||
+                                                weeklySnapshot.data!.isEmpty) {
+                                              return const Padding(
+                                                padding: EdgeInsets.all(24),
+                                                child: Text(
+                                                  "There is no data for the last 7 days.",
+                                                ),
+                                              );
+                                            }
+                                            return WeeklyUsageChart(
+                                              data: weeklySnapshot.data!,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ],

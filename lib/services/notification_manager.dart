@@ -4,6 +4,7 @@ import 'package:productivity_app/notifications/notification_ids.dart';
 import 'package:productivity_app/notifications/notifications.dart';
 import 'package:productivity_app/services/screen_time_manager.dart';
 import 'package:productivity_app/services/task_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationManager {
@@ -13,13 +14,13 @@ class NotificationManager {
 
   Future<void> init() async {
     await _notifications.init();
-    setupNotifications();
+    await setupNotifications();
   }
 
-  void setupNotifications() {
-    scheduleDailyTasksRemainder();
-    scheduleScreenTimeThresholds();
-    checkDistractingAppsAndNotify();
+  Future<void> setupNotifications() async {
+    await scheduleDailyTasksRemainder();
+    await scheduleScreenTimeThresholds();
+    await checkDistractingAppsAndNotify();
   }
 
   Future<void> scheduleDailyTasksRemainder() async {
@@ -85,18 +86,27 @@ class NotificationManager {
     final apps = data['apps'] as Map<String, dynamic>? ?? {};
     final distractingPackages = [
       'com.instagram.android',
-      'com.facebook.katana',
       'com.tiktok.android',
       'com.twitter.android',
     ];
+    final prefs = await SharedPreferences.getInstance();
+    final thresholds = NotificationIds.thresholds;
     for (final package in distractingPackages) {
       final app = apps[package];
-      if (app != null && (app['minutes'] ?? 0) >= 30) {
-        await _notifications.showDistractingAppNotification(
-          appName: app['name'],
-          minutes: app['minutes'],
-          id: 200 + distractingPackages.indexOf(package),
-        );
+      if (app != null) {
+        final minutes = app['minutes'] ?? 0;
+        for (final package in distractingPackages) {
+          final notified = 'notified_${dateString}_${package}_$thresholds';
+          final alreadyNotified = prefs.getBool(notified) ?? false;
+          if (minutes >= 30 && !alreadyNotified) {
+            await _notifications.showDistractingAppNotification(
+              appName: app['name'],
+              minutes: app['minutes'],
+              id: 200 + distractingPackages.indexOf(package),
+            );
+            await prefs.setBool(notified, true);
+          }
+        }
       }
     }
   }

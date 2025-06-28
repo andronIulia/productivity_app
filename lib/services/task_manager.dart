@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:productivity_app/models/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TaskManager {
@@ -21,15 +22,15 @@ class TaskManager {
 
   Future<void> addDailyTask(String taskName) async {
     if (taskName.isNotEmpty) {
-      final taskData = {'title': taskName, 'isDone': false};
-      await userDailyTasksRef.add(taskData);
+      final task = Task(title: taskName, isDone: false);
+      await userDailyTasksRef.add(task.toMap());
     }
   }
 
   Future<void> addOtherTask(String taskName) async {
     if (taskName.isNotEmpty) {
-      final taskData = {'title': taskName, 'isDone': false};
-      await userOtherTasksRef.add(taskData);
+      final task = Task(title: taskName, isDone: false);
+      await userOtherTasksRef.add(task.toMap());
     }
   }
 

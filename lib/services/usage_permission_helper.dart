@@ -9,7 +9,7 @@ class UsagePermissionHelper {
     return await UsageStats.checkUsagePermission() ?? false;
   }
 
-  static Future<void> requestPermission(BuildContext context) async {
+  static Future<void> requestPermission() async {
     if (Platform.isAndroid) {
       AndroidIntent intent = AndroidIntent(
         action: 'android.settings.USAGE_ACCESS_SETTINGS',
@@ -24,22 +24,23 @@ class UsagePermissionHelper {
 
     if (!alreadyRequested) {
       await showDialog(
+        // ignore: use_build_context_synchronously
         context: context,
         builder:
-            (context) => AlertDialog(
+            (dialogContext) => AlertDialog(
               title: const Text('Permission Required'),
               content: const Text(
                 'For screen time tracking, Usage Access permission is required.',
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => Navigator.of(dialogContext).pop(),
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    Navigator.of(context).pop();
-                    await requestPermission(context);
+                    Navigator.of(dialogContext).pop();
+                    await requestPermission();
                     prefs.setBool('usagePermissionRequested', true);
                   },
                   child: const Text('Open Settings'),

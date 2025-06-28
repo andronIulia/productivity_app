@@ -18,7 +18,6 @@ void callbackDispatcher() {
 
     final prefs = await SharedPreferences.getInstance();
     final uid = prefs.getString('uid');
-    //if (uid != null) {
     final screenTimeManager = ScreenTimeManager();
     await screenTimeManager.fetchTodayUsageStats(overrideUid: uid);
 
@@ -35,7 +34,7 @@ void main() async {
 
   final notificationManager = NotificationManager();
   await notificationManager.init();
-  await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
+  await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
 
   await Workmanager().registerPeriodicTask(
     "screenTimeTask",
@@ -98,7 +97,7 @@ class MyApp extends StatelessWidget {
           ),
           darkTheme: ThemeData(
             floatingActionButtonTheme: FloatingActionButtonThemeData(
-              foregroundColor: Color.fromARGB(255, 156, 135, 159),
+              foregroundColor: Color(0xFF2E2B2F),
               backgroundColor: Color(0xFF5B2A86),
               extendedTextStyle: TextStyle(
                 fontWeight: FontWeight.bold,
@@ -110,7 +109,7 @@ class MyApp extends StatelessWidget {
             colorScheme: darkColorScheme.copyWith(
               primary: Color(0xFF9575CD),
               secondary: Color(0xFFBA68C8),
-              surface: Colors.grey[900]!,
+              surface: Color(0xFF212121),
               onPrimary: Colors.black,
               onSurface: Colors.white,
             ),

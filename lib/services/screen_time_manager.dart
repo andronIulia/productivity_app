@@ -8,7 +8,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:usage_stats/usage_stats.dart';
 
 class ScreenTimeManager {
-  final user = FirebaseAuth.instance.currentUser;
+  //final user = FirebaseAuth.instance.currentUser;
 
   Future<void> fetchTodayUsageStats({String? overrideUid}) async {
     final uid = overrideUid ?? FirebaseAuth.instance.currentUser?.uid;

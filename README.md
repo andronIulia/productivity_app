@@ -1,18 +1,21 @@
 # productivity_app
 
-repository: https://github.com/andronIulia/productivity_app
+Repository: https://github.com/andronIulia/productivity_app
 
 A new Flutter project.
 
-## Getting Started
+## Decriere
 
-This project is a starting point for a Flutter application.
+Acest proiect este o aplicație Android pentru gestionarea timpului și creșterea productivității, dezvoltată cu Flutter. Codul sursă complet este disponibil în repository-ul de mai sus.
 
-A few resources to get you started if this is your first Flutter project:
+## Pașii de compilare
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Conectează un dipozitiv Android.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+git clone https://github.com/andronIulia/productivity_app
+
+cd productivity_app
+
+flutter pub get
+
+flutter run

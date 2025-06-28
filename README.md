@@ -1,5 +1,7 @@
 # productivity_app
 
+repository: https://github.com/andronIulia/productivity_app
+
 A new Flutter project.
 
 ## Getting Started
